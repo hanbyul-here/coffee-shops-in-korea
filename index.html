@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>Starbucks In Korea</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://mapzen.com/js/mapzen.css">
+  <link rel="stylesheet" href="https://rawgit.com/leongersen/noUiSlider/master/distribute/nouislider.min.css">
+  <style>
+  html,body {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+  }
+  #map {
+    width: 100%;
+    height: 100%;
+  }
+  button {
+    width: 100%;
+    margin-bottom: 20px;
+  }
+  .container {
+    width: 300px;
+    padding: 10px 20px 40px 20px;
+    background-color: white;
+  }
+  .slider-wrapper {
+    margin-bottom: 40px;
+  }
+  /* noUISlider override */
+  .noUi-horizontal {
+    height: 10px;
+  }
+  .noUi-horizontal .noUi-handle {
+    height: 20px;
+  }
+  .noUi-handle:after, .noUi-handle:before {
+    content: none;
+  }
+  .noUi-connect {
+    background: #ccc;
+    outline: 1px solid #333;
+  }
+  /* I am so lazy, let's just use the slider as legend */
+  .scale-slider-wrapper .noUi-base {
+    background-image: linear-gradient(
+                        to right,
+                        /*rgb(255,255,178),
+                        rgb(255,255,178) 25%,*/
+                        rgb(254,217,118),
+                        rgb(254,217,118) 25%,
+                        rgb(254,178,76) 25%,
+                        rgb(254,178,76) 50%,
+                        rgb(253,141,60) 50%,
+                        rgb(253,141,60) 75%,
+                        rgb(252,78,42) 75%,
+                        rgb(252,78,42)
+      /*                  rgb(227,26, 28) 62.5%,
+                        rgb(227,26, 28) 75%,
+                        rgb(177,0,38)*/
+                      );
+  }
+  .scale-slider-wrapper .noUi-connect {
+    background: transparent;
+    outline: 1px solid #333;
+  }
+  h3 {
+    margin-top: 0;
+  }
+  label {
+    font-size: 14px;
+    font-weight: 700;
+  }
+  </style>
+</head>
+<body>
+  <div id="map">
+  </div>
+  <script src="https://mapzen.com/js/mapzen.js"></script>
+  <script src="https://rawgit.com/leongersen/noUiSlider/master/distribute/nouislider.js"></script>
+  <script>
+
+
+    var dateSliderMin = 1999;
+    var dateSliderMax = 2017;
+
+    var slidingAnimValue = 1999;
+
+    L.Mapzen.apiKey = 'mapzen-cstHyBQ';
+    var map = L.Mapzen.map('map', {
+      tangramOptions: {
+        scene: {
+          import: './scene.yaml',
+          global: {
+            minDateRange: dateSliderMin,
+            maxDateRange: dateSliderMax,
+            property_key_name: 'open_dt',
+            hide_filter: function () {
+              var date = Number(feature[global.property_key_name][0] + feature[global.property_key_name][1] + feature[global.property_key_name][2] + feature[global.property_key_name][3]);
+              if (date >=  global.minDateRange && date <= global.maxDateRange) return true;
+              else return false;
+            }
+         }
+        }
+      }
+    });
+    map.setView([37.335988, 127.09101], 10);
+
+    L.Mapzen.hash({map: map})
+
+    var tangramLayer = map.getTangramLayer();
+
+    var jsonToTable = function (obj) {
+      var wrapperTableElem = document.createElement('table');
+      wrapperTableElem.classList.add('feature-table');
+      for (var key in obj) {
+
+          var tableRowElem = document.createElement('tr');
+          var nameColElem = document.createElement('td');
+          var valueColElem = document.createElement('td');
+          nameColElem.textContent = key;
+          valueColElem.textContent = obj[key];
+          tableRowElem.appendChild(nameColElem);
+          tableRowElem.appendChild(valueColElem);
+          wrapperTableElem.appendChild(tableRowElem);
+
+      }
+      return wrapperTableElem;
+    }
+
+    var onTangramClick = function (selection) {
+      if (selection.feature) {
+        var popup = L.popup()
+                  .setLatLng(selection.leaflet_event.latlng)
+                  .setContent(jsonToTable(selection.feature.properties))
+                  .openOn(map);
+      }
+    }
+
+    tangramLayer.setSelectionEvents({
+       click: onTangramClick
+    });
+
+
+    var animate = function (slid) {
+        slid.set([dateSliderMin, slidingAnimValue]);
+        tangramLayer.scene.config.global.minDateRange = dateSliderMin
+        tangramLayer.scene.config.global.maxDateRange = slidingAnimValue
+        tangramLayer.scene.updateConfig().then (function () {
+          if (slidingAnimValue <= dateSliderMax) {
+            slidingAnimValue++;
+            animate(slid);
+          }
+        })
+    }
+
+    var sliderControl = L.control({position: 'topright'});
+
+    sliderControl.onAdd = function () {
+      var containerDiv = L.DomUtil.create('div', 'container');
+      var titleH = L.DomUtil.create('h3');
+      titleH.textContent = 'Starkbucks in Korea'
+      var sliderDiv = L.DomUtil.create('div', 'slider-wrapper');
+      var dateLabel = L.DomUtil.create('label');
+      dateLabel.textContent = 'Year';
+
+      sliderDiv.id = 'slider';
+      noUiSlider.create(sliderDiv, {
+        start: [dateSliderMin, dateSliderMax],
+        connect: true,
+        step: 1,
+        tooltips: true,
+        range: {
+          'min': dateSliderMin,
+          'max': dateSliderMax
+        },
+        format: {
+          to: function (value) {
+            return value;
+          },
+          from: function (value) {
+            return value;
+          }
+        },
+        pips: { // Show a scale with the slider
+          mode: 'positions',
+          stepped: true,
+          density: 20,
+          values: [0,25,50,75,100]
+        }
+      });
+
+
+      var scaleLabel = L.DomUtil.create('label');
+      scaleLabel.innerHTML = 'Scale(<a href="https://en.wikipedia.org/wiki/Mercalli_intensity_scale">MI</a>)';
+
+      // var scaleSliderDiv = L.DomUtil.create('div', 'scale-slider-wrapper');
+      // scaleSliderDiv.id = 'scale-slider';
+
+      // noUiSlider.create(scaleSliderDiv, {
+      //   start: [2.0, 6.0],
+      //   connect: true,
+      //   step: 0.5,
+      //   range: {
+      //     'min': 2.0,
+      //     'max': 6.0
+      //   },
+      //   pips: { // Show a scale with the slider
+      //     mode: 'positions',
+      //     stepped: true,
+      //     density: 12.5,
+      //     values: [0,25,50,75,100]
+      //   }
+      // });
+
+      var playButton = L.DomUtil.create('button');
+      playButton.textContent = 'play';
+
+      playButton.onclick = function () {
+        slidingAnimValue = dateSliderMin;
+        animate(sliderDiv.noUiSlider);
+      }
+
+      sliderDiv.noUiSlider.on('change', function(){
+        var vals = sliderDiv.noUiSlider.get();
+        tangramLayer.scene.config.global.minDateRange = parseInt(vals[0]);
+        tangramLayer.scene.config.global.maxDateRange = parseInt(vals[1]);
+        tangramLayer.scene.updateConfig();
+      });
+
+      // scaleSliderDiv.noUiSlider.on('change', function(){
+      //   var vals = scaleSliderDiv.noUiSlider.get();
+      //   tangramLayer.scene.config.global.minScale = parseFloat(vals[0]);
+      //   tangramLayer.scene.config.global.maxScale = parseFloat(vals[1]);
+      //   tangramLayer.scene.updateConfig();
+      // });
+
+
+      L.DomEvent.disableClickPropagation(containerDiv);
+
+      containerDiv.appendChild(titleH);
+      containerDiv.appendChild(playButton);
+      containerDiv.appendChild(dateLabel);
+      containerDiv.appendChild(sliderDiv);
+
+
+      return containerDiv;
+    }
+
+    sliderControl.addTo(map);
+
+
+  </script>
+</body>
+</html>

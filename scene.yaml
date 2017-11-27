@@ -1,0 +1,24 @@
+import:
+    [https://mapzen.com/carto/refill-style/9/refill-style.zip,
+     https://mapzen.com/carto/refill-style/9/themes/label-2.zip,
+    https://mapzen.com/carto/refill-style/9/themes/color-gray.zip]
+
+
+sources:
+    starbucks:
+        type: GeoJSON
+        url: ./data/starbucks.json
+
+layers:
+    starbucks:
+        data: { source: starbucks }
+        filter: global.hide_filter
+        draw:
+            points:
+                interactive: true
+                collide: false
+                size: 10px
+                color: green
+                outline:
+                    color: white
+                    width: 1
