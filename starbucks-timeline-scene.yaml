@@ -5,28 +5,14 @@ import:
 
 
 sources:
-    coffee-bean:
-        type: GeoJSON
-        url: ./data/coffee-bean.json
     starbucks:
         type: GeoJSON
         url: ./data/starbucks.json
 
 layers:
-    coffee-bean-layer:
-        data: {source: coffee-bean}
-        draw:
-            points:
-                interactive: true
-                collide: false
-                size: 10px
-                color: purple
-                outline:
-                    color: white
-                    width: 1
-
-    starbucks-layer:
+    starbucks:
         data: { source: starbucks }
+        filter: global.hide_filter
         draw:
             points:
                 interactive: true
