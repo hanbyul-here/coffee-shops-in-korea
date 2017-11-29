@@ -11,8 +11,22 @@ sources:
     starbucks:
         type: GeoJSON
         url: ./data/starbucks.json
+    baek-dabang:
+        type: GeoJSON
+        url: ./data/baek-dabang.json
 
 layers:
+    baek-dabang-layer:
+        data: {source: baek-dabang}
+        draw:
+            points:
+                interactive: true
+                collide: false
+                size: 10px
+                color: blue
+                outline:
+                    color: white
+                    width: 1
     coffee-bean-layer:
         data: {source: coffee-bean}
         draw:
